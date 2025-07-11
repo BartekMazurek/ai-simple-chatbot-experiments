@@ -1,0 +1,19 @@
+services:
+
+    db:
+        build:
+            context: .
+            dockerfile: ./docker/postgres/Dockerfile
+        container_name: postgres_vectors
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: postgres_vector_db
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+
+volumes:
+    postgres_data:
