@@ -15,5 +15,15 @@ services:
         ports:
             - "5432:5432"
 
+    model:
+        build:
+            context: .
+            dockerfile: ./docker/model/Dockerfile
+        container_name: embedding_model
+        volumes:
+            - ./volumes/model:/app/model
+        depends_on:
+            - db
+
 volumes:
     postgres_data:
