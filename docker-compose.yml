@@ -25,5 +25,20 @@ services:
         depends_on:
             - db
 
+    api:
+        build:
+            context: .
+            dockerfile: ./docker/python/Dockerfile
+        container_name: fastapi
+        ports:
+            - "8000:8000"
+        depends_on:
+            - model
+        environment:
+            DATABASE_URL: postgres://postgres:postgres@db:5432/postgres_vector_db
+        volumes:
+            - ./app:/app
+            - ./volumes/model:/model
+
 volumes:
     postgres_data:
