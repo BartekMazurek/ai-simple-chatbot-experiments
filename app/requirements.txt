@@ -1,5 +1,6 @@
 fastapi
 uvicorn
 psycopg2-binary
+pgvector>=0.2.2
 sentence-transformers
 torch
