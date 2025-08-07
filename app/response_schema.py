@@ -12,3 +12,7 @@ class SearchEmbedding(BaseModel):
 class SearchEmbeddingResponse(BaseModel):
     query: str
     data: list[SearchEmbedding]
+
+class CheckEmbeddingResponse(BaseModel):
+    query: str
+    norm: float

@@ -5,3 +5,6 @@ class CreateEmbeddingRequest(BaseModel):
 
 class SearchEmbeddingRequest(BaseModel):
     query: str
+
+class CheckEmbeddingRequest(BaseModel):
+    query: str
