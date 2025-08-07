@@ -3,12 +3,15 @@ from db import connection
 from pgvector.psycopg2 import register_vector
 from psycopg2.extras import RealDictCursor
 from transformer import model
+import numpy as np
 
 from request_schema import CreateEmbeddingRequest
 from response_schema import CreateEmbeddingResponse
 from request_schema import SearchEmbeddingRequest
 from response_schema import SearchEmbedding
 from response_schema import SearchEmbeddingResponse
+from request_schema import CheckEmbeddingRequest
+from response_schema import CheckEmbeddingResponse
 
 app = FastAPI()
 
@@ -80,6 +83,18 @@ def search_embedding(request: SearchEmbeddingRequest):
         conn.close()
 
         return SearchEmbeddingResponse(query=request.query, data=data)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/check-normalization", response_model=CheckEmbeddingResponse)
+def check_normalization(request: CheckEmbeddingRequest):
+    try:
+        #embedding = model.encode(request.query).tolist()
+        embedding = model.encode(request.query, normalize_embeddings=True).tolist()
+        norm = np.linalg.norm(embedding)
+
+        return {"query": request.query, "norm": norm}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
