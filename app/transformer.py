@@ -1,5 +1,7 @@
-from sentence_transformers import SentenceTransformer
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-MODEL_PATH = "/model/all-MiniLM-L6-v2"
+TOKENIZER_PATH = "/model/flan_t5_small_tokenizer"
+LLM_PATH = "/model/flan_t5_small_model"
 
-model = SentenceTransformer(MODEL_PATH)
+tokenizer = T5Tokenizer.from_pretrained(TOKENIZER_PATH)
+llm = T5ForConditionalGeneration.from_pretrained(LLM_PATH)
