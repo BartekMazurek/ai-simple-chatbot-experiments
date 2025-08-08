@@ -2,7 +2,8 @@ from fastapi import FastAPI, HTTPException
 from db import connection
 from pgvector.psycopg2 import register_vector
 from psycopg2.extras import RealDictCursor
-from transformer import model
+from sentence_transformer import model
+from transformer import tokenizer, llm
 import numpy as np
 
 from request_schema import CreateEmbeddingRequest
@@ -12,6 +13,9 @@ from response_schema import SearchEmbedding
 from response_schema import SearchEmbeddingResponse
 from request_schema import CheckEmbeddingRequest
 from response_schema import CheckEmbeddingResponse
+from request_schema import LlmSearchEmbeddingRequest
+from response_schema import LlmSearchEmbedding
+from response_schema import LlmSearchEmbeddingResponse
 
 app = FastAPI()
 
@@ -83,6 +87,59 @@ def search_embedding(request: SearchEmbeddingRequest):
         conn.close()
 
         return SearchEmbeddingResponse(query=request.query, data=data)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/llm/search", response_model=LlmSearchEmbeddingResponse)
+def search_embedding_llm(request: LlmSearchEmbeddingRequest):
+    try:
+        embedding = model.encode(request.query, normalize_embeddings=True).tolist()
+
+        conn = connection()
+        register_vector(conn)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        sql = """
+            SELECT id, content, embedding <-> %s::VECTOR AS distance
+            FROM vector.items
+            ORDER BY distance
+            LIMIT %s;
+        """
+
+        cur.execute(sql, (embedding, 5))
+        results = cur.fetchall()
+
+        data = [
+            LlmSearchEmbedding(
+                id=row["id"],
+                content=row["content"],
+                distance=row["distance"],
+            )
+            for row in results
+        ]
+
+        cur.close()
+        conn.close()
+
+        # PREPARE LLM PROMPT
+        combined_context = " ".join([row["content"] for row in results])
+        prompt = (
+            f"Answer the following question based only on the provided context.\n\n"
+            f"Context:\n{combined_context}\n\n"
+            f"Question:\n{request.query}\n\n"
+            f"Answer:"
+        )
+
+        # TOKENIZATION AND LLM INFERENCE
+        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
+        outputs = llm.generate(**inputs, max_length=150, num_beams=5)
+        answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+        #print(f"Prompt: {prompt}")
+        #print(f"Generated answer: {answer}")
+
+        return LlmSearchEmbeddingResponse(query=request.query, answer=answer, data=data)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
