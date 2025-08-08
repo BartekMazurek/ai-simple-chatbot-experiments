@@ -8,3 +8,6 @@ class SearchEmbeddingRequest(BaseModel):
 
 class CheckEmbeddingRequest(BaseModel):
     query: str
+
+class LlmSearchEmbeddingRequest(BaseModel):
+    query: str
