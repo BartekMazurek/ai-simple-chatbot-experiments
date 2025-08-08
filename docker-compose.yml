@@ -15,15 +15,25 @@ services:
         ports:
             - "5432:5432"
 
-    model:
+    model_1:
         build:
             context: .
-            dockerfile: ./docker/model/Dockerfile
+            dockerfile: ./docker/model1/Dockerfile
         container_name: embedding_model
         volumes:
             - ./volumes/model:/app/model
         depends_on:
             - db
+
+    model_2:
+        build:
+            context: .
+            dockerfile: ./docker/model2/Dockerfile
+        container_name: llm_model
+        volumes:
+            - ./volumes/model:/app/model
+        depends_on:
+            - model_1
 
     api:
         build:
@@ -33,7 +43,7 @@ services:
         ports:
             - "8000:8000"
         depends_on:
-            - model
+            - model_2
         environment:
             DATABASE_URL: postgres://postgres:postgres@db:5432/postgres_vector_db
         volumes:
